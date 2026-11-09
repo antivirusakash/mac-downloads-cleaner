@@ -14,6 +14,7 @@ r = json.load(open(a.report))
 home = os.path.expanduser("~")
 for i in r["items"]:
     i["path"] = i["path"].replace(home, "~")
+    i["reason"] = i["reason"].replace(home + "/", "~/")
     if "keeps" in i:
         i["keeps"] = i["keeps"].replace(home, "~")
     if "keeps_all" in i:

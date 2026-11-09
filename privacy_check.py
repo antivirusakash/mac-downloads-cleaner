@@ -7,6 +7,7 @@ Fails when a tracked file contains
   - any word from those file names that the system dictionary doesn't know
     (people's names, places, companies), unless listed in PUBLIC_WORDS,
   - any extra string listed in private/denylist.txt (one per line).
+Images (README screenshots) are checked by the text Vision reads in them.
 LICENSE may carry your name as the copyright holder.
 """
 import json
@@ -18,6 +19,8 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import owner  # noqa: E402
+
+IMAGES = (".png", ".jpg", ".jpeg", ".gif", ".webp")
 
 EMAIL = re.compile(rb"[\w.+-]+@[\w-]+(\.[A-Za-z]{2,})+")
 PHONE = re.compile(rb"(?<![\w.])(\+?\d[\d -]{9,}\d)(?![\w.])")
@@ -35,7 +38,7 @@ def tracked():
 # site names, ID-term vocabulary. Reviewed by hand; a person's name never goes here.
 PUBLIC_WORDS = set("""aadhaar automation chatgpt collab config ebook elevenlabs email figma freepik github google
 download gstin headshot hiring kotak linkedin localized notebooklm offsite onboarding online payslip quicklook screenshot
-wallpapersden""".split())
+wallpapersden workflow""".split())
 
 
 def _english(word, dic):
@@ -84,12 +87,17 @@ def main():
     name_pat = re.compile(rb"(?<![a-z])(" + b"|".join(re.escape(w.encode()) for w in sorted(names)) + rb")(?![a-z])") \
         if names else None
     fails = []
+    shots = [os.path.join(HERE, r) for r in tracked() if r.lower().endswith(IMAGES)]
+    if shots:
+        import declutter  # Vision OCR; only loaded when there are images to read
+        declutter.look_all(shots)
     for rel in tracked():
         if rel in SKIP or rel.startswith("private/"):
             if rel.startswith("private/"):
                 fails.append(f"{rel}: private/ must never be tracked")
             continue
-        data = open(os.path.join(HERE, rel), "rb").read()
+        full = os.path.join(HERE, rel)
+        data = declutter.LOOK[full]["text"].encode() if rel.lower().endswith(IMAGES) else open(full, "rb").read()
         low = data.lower()
         for m in pat.finditer(low):
             if low[max(0, m.start() - 11):m.start()] == b"github.com/":  # your own repo URL

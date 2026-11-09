@@ -1,23 +1,33 @@
-# declutter
+<div align="center">
 
-**Your Downloads folder is full, and you're scared to empty it.** Somewhere in there is your passport scan. Next to it are dozens of AI images you made once, a résumé from a hiring round that ended in March, and a hotel quote for a trip you took last year. Sorting by size or date can't tell those apart.
+<h1>declutter</h1>
 
-declutter opens every file, works out what it is and whether you still need it, and shows you one page grouped like this:
+<p><b>Find out what you can safely delete from your Mac's Downloads folder.</b><br>
+It opens every file, works out what it is, and shows you what can go. It never deletes anything.</p>
 
-| What it found | Files | Space | Suggestion |
-|---|---|---|---|
-| Copies you already have somewhere else | 14 | 58 MB | safe to delete |
-| AI images and audio | 87 | 250 MB | probably done with |
-| Exports of your own ads and app screens | 17 | 252 MB | probably done with |
-| Other people's résumés | 6 | 29 MB | probably done with |
-| Trip quotes for trips that are over | 2 | 6 MB | probably done with |
-| Near-identical burst shots | 12 | 124 MB | look first |
-| Camera photos | 24 | 1.7 GB | look first |
-| ID, tax and bank papers | 13 | 98 MB | keep |
+<p>
+<a href="https://github.com/antivirusakash/declutter/actions/workflows/test.yml"><img alt="Tests" src="https://github.com/antivirusakash/declutter/actions/workflows/test.yml/badge.svg"></a>
+<img alt="macOS" src="https://img.shields.io/badge/macOS-only-111?logo=apple&logoColor=white">
+<img alt="Python 3.9+" src="https://img.shields.io/badge/python-3.9%2B-3776AB?logo=python&logoColor=white">
+<img alt="No installs" src="https://img.shields.io/badge/dependencies-none-2ea44f">
+<img alt="Runs offline" src="https://img.shields.io/badge/network-never-2ea44f">
+<a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-blue"></a>
+</p>
 
-These are real numbers from the author's own Downloads. Altogether, about 1.8 GB was stuff they were probably done with.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/hero-dark.png">
+  <img alt="The preview page: a bar splitting 7 GB of Downloads into safe to delete, likely junk, your call and personal papers, then a table of groups with sizes and a tick box for each" src="docs/hero-light.png" width="820">
+</picture>
 
-It never deletes anything. You tick the groups you're done with, the page adds up the space, and you delete them yourself.
+<sub>A real scan of the author's 7 GB Downloads folder.</sub>
+
+</div>
+
+<br>
+
+**Your Downloads folder is full, and you're scared to empty it.** Somewhere in there is your passport scan. Next to it are dozens of AI images you made once, a résumé from a hiring round that ended in March, and a hotel quote for a trip you took last year. Sorting by size or date can't tell those apart. declutter can, because it reads what's inside each file.
+
+In the scan above, it found 1.67 GB that was probably junk and 145 MB that was safe to delete outright. The author's ID, tax and bank papers (93 MB) got their own group, set aside to keep.
 
 ## Try it
 
@@ -30,16 +40,32 @@ A 7 GB folder takes a bit over a minute. There's nothing to install, and none of
 
 To scan a different folder, run `DIR=~/Desktop ./run.sh`.
 
-## What it can tell apart
+## What it finds
 
-- A file you already have a copy of, in another folder or on an external drive. The two copies have to match exactly, byte for byte.
-- AI images, and which app made them. Many AI images carry a hidden label inside the file saying what made them, and declutter reads it.
-- Stock photos, UI kits, fonts and design exports you can download again.
-- Résumés and job posts from someone else's hiring round.
-- Travel quotes and event passes whose dates have passed. A trip next month stays.
-- Burst shots that look almost the same. It keeps the one you marked as a pick, or else the best-looking one.
-- Photos with real people in them. These are always held back for you to look at.
-- Your ID, tax and bank papers. They sit in their own group, and that group is never ticked for you.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/groups-dark.png">
+  <img alt="Groups of old downloads: copies kept elsewhere, AI-generated images, design kits, screenshots, stock photos, other people's résumés, pitches and saved web pages, each with a reason" src="docs/groups-light.png" width="820">
+</picture>
+
+- **Copies you already have**, in another folder, in iCloud Drive or on an external drive. The two have to match byte for byte.
+- **AI images, and which app made them.** Many AI images carry a hidden label inside the file saying what made them, and declutter reads it.
+- **Stock photos, UI kits, fonts and design exports** you can download or export again.
+- **Résumés and job posts** from someone else's hiring round.
+- **Travel quotes and event passes whose dates have passed.** A trip next month stays.
+- **Burst shots that look almost the same.** It keeps the one you marked as a pick, or else the best-looking one.
+- **Photos with real people in them.** These are always held back for you to look at.
+- **Your ID, tax and bank papers.** They sit in their own group, and that group is never ticked for you.
+
+## Every file comes with a reason
+
+Open a group and each file says why it's there and what stays if you delete it.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/files-dark.png">
+  <img alt="Expanded groups: a PDF with an exact copy kept in Documents, an AI image whose content credentials say it was made with Sora, and a candidate's résumé" src="docs/files-light.png" width="820">
+</picture>
+
+<sub>This one is the made-up test folder from <code>tests/</code>, since a real one is full of other people's names.</sub>
 
 ## What it won't suggest deleting
 
@@ -70,6 +96,32 @@ To test it, AI reviewers went through 290 old files on the author's Mac, opening
 - It found 94% of the space that could go.
 
 The rules were tuned on those same 290 files, so expect it to do a bit worse on yours.
+
+## Questions
+
+<details>
+<summary><b>Will it delete my files?</b></summary>
+
+No. It only writes a report and a web page. You decide what goes and delete it yourself in Finder.
+</details>
+
+<details>
+<summary><b>Does it send my files anywhere?</b></summary>
+
+No. Everything runs on your Mac with the Python and system tools macOS already ships with. It makes no network calls.
+</details>
+
+<details>
+<summary><b>Why not just sort by size and date like other cleaners?</b></summary>
+
+Because the biggest, oldest file in your Downloads might be the only copy of your wedding video, and a tiny one might be a candidate's résumé you should have deleted months ago. Age only decides what gets looked at. What the file is decides the suggestion.
+</details>
+
+<details>
+<summary><b>Why Mac only?</b></summary>
+
+It reads files with tools built into macOS: Spotlight for metadata and full-text search, PDFKit for PDF text, and Vision for text and faces in images.
+</details>
 
 ## Limits
 
@@ -140,4 +192,6 @@ Reports and previews contain your file names and stay in `out/`, which git ignor
 
 </details>
 
-MIT licensed.
+## License
+
+MIT. Issues and pull requests are welcome. Run `python3 -I privacy_check.py` before you push, so nothing from your own scans ends up in the repo.

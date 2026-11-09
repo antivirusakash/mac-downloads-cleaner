@@ -120,6 +120,7 @@ summary .grow { flex: 1; min-width: 0; }
 const D = __DATA__;
 const GB = 1 << 30, MB = 1 << 20;
 const fmt = b => b >= GB ? (b / GB).toFixed(2) + " GB" : b >= MB ? Math.round(b / MB) + " MB" : Math.max(1, Math.round(b / 1024)) + " KB";
+const items = n => n === 1 ? "1 item" : n + " items";
 const TIER_ORDER = { safe: 0, likely: 1, review: 2, keep: 3 };
 const WHY = {
   "Duplicates": "Same bytes as another file that stays.",
@@ -180,7 +181,7 @@ try { saved = JSON.parse(localStorage.getItem("picks") || "{}"); } catch (e) {}
 const picked = k => (k in saved ? saved[k] : groups[k].tier === "safe");
 
 document.getElementById("sub").textContent =
-  `Scanned ${D.generated}. ${flaggedN} items flagged, ${fmt(flagged)} in total` +
+  `Scanned ${D.generated}. ${items(flaggedN)} flagged, ${fmt(flagged)} in total` +
   (D.total ? ` out of ${fmt(D.total)}.` : ".");
 
 function renderBar() {
@@ -220,7 +221,7 @@ function updatePicked() {
   let b = 0, n = 0;
   list.forEach(g => { if (picked(g.category + "|" + g.tier)) { b += g.bytes; n += g.items.length; } });
   document.getElementById("picked").textContent = fmt(b);
-  document.getElementById("pickedn").textContent = `(${n} items)`;
+  document.getElementById("pickedn").textContent = `(${items(n)})`;
 }
 
 function renderGroups() {
@@ -231,9 +232,9 @@ function renderGroups() {
         <span class="p">${esc(short(it.path))}</span><span class="s">${fmt(it.saves)}</span>
         <span class="w">${esc(it.reason)}${it.last_used ? " · last used " + esc(it.last_used) : ""}${it.keeps ? " · keeping " + esc(short(it.keeps)) + (it.more_keeps > 0 ? ` (+${it.more_keeps} more)` : "") : ""}</span>
       </div>`).join("");
-    const more = g.items.length > SHOW ? `<div class="more">and ${g.items.length - SHOW} smaller items</div>` : "";
+    const more = g.items.length > SHOW ? `<div class="more">and ${items(g.items.length - SHOW).replace("item", "smaller item")}</div>` : "";
     return `<details><summary><span class="pill ${g.tier}">${g.tier}</span><span class="grow">${esc(g.category)}</span>
-      <span class="num why">${g.items.length} items · ${fmt(g.bytes)}</span></summary><div class="files">${rows}${more}</div></details>`;
+      <span class="num why">${items(g.items.length)} · ${fmt(g.bytes)}</span></summary><div class="files">${rows}${more}</div></details>`;
   }).join("")).join("");
 }
 
