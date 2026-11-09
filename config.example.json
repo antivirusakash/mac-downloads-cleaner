@@ -1,0 +1,7 @@
+{
+  "names": ["Jane", "Doe"],
+  "handles": ["janedoe"],
+  "brands": ["AcmeApp"],
+  "work_hints": ["acme"],
+  "country": "US"
+}

@@ -1,0 +1,9 @@
+name: test
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unit and end-to-end tests
+        run: python3 -I -m unittest discover -s tests -v

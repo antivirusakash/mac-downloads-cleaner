@@ -1,0 +1,10 @@
+# Your scan results and anything personal never leave this machine.
+private/
+out/
+out-*/
+report.json
+preview.html
+TRAIL.md
+__pycache__/
+*.pyc
+.DS_Store

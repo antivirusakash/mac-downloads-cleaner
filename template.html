@@ -1,0 +1,241 @@
+<title>Downloads Cleanup Preview</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Fraunces:opsz,wght@9..144,600&display=swap">
+<style>
+/* Layout: one reading column; a capacity bar like a disk gauge, then the category table, then per-category file lists. */
+:root {
+  --bg: #f6f7f9; --panel: #ffffff; --fg: #1b2230; --muted: #5d6676; --line: #dfe3ea;
+  --accent: #2d5be3;
+  --safe: #1f8a5b; --safe-bg: #e3f4ec;
+  --likely: #b26a00; --likely-bg: #fbefdc;
+  --review: #5a6b8c; --review-bg: #e8ecf4;
+  --keep: #c9ced8;
+  --mine: #8a4fb8; --mine-bg: #f1e7f8;
+  --display: "Fraunces", Georgia, serif;
+  --body: "IBM Plex Sans", -apple-system, "Helvetica Neue", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #12161d; --panel: #1a1f29; --fg: #e6e9ef; --muted: #98a1b2; --line: #2b3240;
+  --accent: #7c9cff;
+  --safe: #4cc38a; --safe-bg: #17342a; --likely: #f0a840; --likely-bg: #3a2a12;
+  --review: #a3b1cf; --review-bg: #262e3e; --keep: #3a4252; --mine: #c99be8; --mine-bg: #33243f; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #12161d; --panel: #1a1f29; --fg: #e6e9ef; --muted: #98a1b2; --line: #2b3240;
+  --accent: #7c9cff;
+  --safe: #4cc38a; --safe-bg: #17342a; --likely: #f0a840; --likely-bg: #3a2a12;
+  --review: #a3b1cf; --review-bg: #262e3e; --keep: #3a4252; --mine: #c99be8; --mine-bg: #33243f; color-scheme: dark; }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 880px; margin: 0 auto; padding-block: 32px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 28px; }
+h1 { overflow-wrap: anywhere; font-family: var(--display); font-weight: 600; font-size: 2rem; line-height: 1.15; margin: 0; text-wrap: balance; }
+h2 { font-size: 1rem; font-weight: 600; margin: 0; }
+.sub { color: var(--muted); margin: 6px 0 0; }
+.mono { font-family: var(--mono); font-size: 0.85em; }
+.num { font-variant-numeric: tabular-nums; }
+.gauge { display: grid; gap: 10px; }
+.bar { display: flex; height: 22px; border-radius: 4px; overflow: hidden; background: var(--keep); }
+.bar span { display: block; height: 100%; transition: width .3s; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; color: var(--muted); font-size: 0.85rem; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+.pick { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px;
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
+.pick strong { font-family: var(--display); font-size: 1.6rem; font-weight: 600; }
+.tablebox { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; }
+table { width: 100%; border-collapse: collapse; min-width: 560px; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 500; }
+tr:last-child td { border-bottom: 0; }
+td.r, th.r { text-align: right; white-space: nowrap; }
+tfoot td { font-weight: 600; }
+.pill { display: inline-block; padding: 1px 8px; border-radius: 99px; font-size: 0.78rem; font-weight: 500; white-space: nowrap; }
+.safe { color: var(--safe); background: var(--safe-bg); }
+.likely { color: var(--likely); background: var(--likely-bg); }
+.review { color: var(--review); background: var(--review-bg); }
+.keep { color: var(--mine); background: var(--mine-bg); }
+tr.sec td { background: var(--bg); font-size: 0.8rem; font-weight: 600; color: var(--muted); padding-top: 14px; }
+h3.sec { font-size: 0.85rem; font-weight: 600; color: var(--muted); margin: 8px 0 0; }
+input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); }
+.why { color: var(--muted); font-size: 0.88rem; }
+details { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; }
+summary { cursor: pointer; padding: 12px 16px; display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; }
+summary:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+summary .grow { flex: 1; min-width: 0; }
+.files { padding: 0 16px 12px; display: grid; gap: 0; }
+.file { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; padding: 8px 0; border-top: 1px solid var(--line); }
+.file .p { font-family: var(--mono); font-size: 0.82rem; overflow-wrap: anywhere; min-width: 0; }
+.file .s { font-variant-numeric: tabular-nums; font-size: 0.85rem; text-align: right; }
+.file .w { grid-column: 1 / -1; color: var(--muted); font-size: 0.82rem; overflow-wrap: anywhere; }
+.more { color: var(--muted); font-size: 0.82rem; padding-top: 8px; }
+.method { color: var(--muted); font-size: 0.9rem; display: grid; gap: 6px; max-width: 68ch; }
+.method p { margin: 0; }
+@media (prefers-reduced-motion: reduce) { .bar span { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>What can go from <span class="mono" style="font-size:.8em">__LABEL__</span></h1>
+    <p class="sub" id="sub"></p>
+  </header>
+
+  <section class="gauge" aria-label="Space breakdown">
+    <div class="bar" id="bar"></div>
+    <div class="legend" id="legend"></div>
+  </section>
+
+  <div class="pick" aria-live="polite">
+    <span>Ticked categories free up</span>
+    <span><strong class="num" id="picked">0 GB</strong> <span class="why" id="pickedn"></span></span>
+  </div>
+
+  <div class="tablebox">
+    <table>
+      <thead><tr><th></th><th>Type</th><th>Confidence</th><th class="r">Items</th><th class="r">Saves</th><th>Why it's flagged</th></tr></thead>
+      <tbody id="rows"></tbody>
+      <tfoot><tr><td></td><td>All flagged (not counting kept papers)</td><td></td><td class="r num" id="ft-n"></td><td class="r num" id="ft-b"></td><td></td></tr></tfoot>
+    </table>
+  </div>
+
+  <section style="display:grid;gap:10px">
+    <h2>Files in each group</h2>
+    <div id="groups" style="display:grid;gap:10px"></div>
+  </section>
+
+  <section class="method">
+    <h2 style="color:var(--fg)">How it decides</h2>
+    <p>Age only decides what gets looked at: a download untouched for 60+ days. What it is decides the confidence. Moving to a new Mac or restoring a backup wipes open history, so "no open recorded" means unknown, and age alone never makes anything safe.</p>
+    <p><span class="pill safe">safe</span> a byte-identical copy exists somewhere that stays: elsewhere in Downloads, in ~/Documents, iCloud Drive, or another drive (each copy is compared byte for byte, and files inside zips by checksum). Also zips already unzipped next to themselves, and installers for apps in Applications. A safe item never relies on a copy that another group would delete.</p>
+    <p><span class="pill likely">likely</span> things you can get again: AI images, stock photos and music, Figma kits and fonts, Figma frame exports, screenshots, app builds and data exports, ebooks, other people's résumés, and zips that are 90%+ copied elsewhere (the reason names the few files only found here). Kinds come from file names, types, and page counts.</p>
+    <p>Purpose signals look at whose a file is and whether its job is over: a candidate's résumé after hiring, a travel quote after the trip, a vendor's price list, an invite after the event, a web page printed to PDF. They read the PDF's text and the app that made it (a browser, Google Docs, Canva, a travel agent's software). Anything that mentions your name, handle or brands never moves on these signals, and a trip or event dated in the future stays in review.</p>
+    <p><span class="pill review">review</span> things that may be the only copy of your own work or memories: your creatives and decks, camera photos, recordings, and anything no rule recognised.</p>
+    <p><span class="pill keep">keep</span> ID, tax, bank and legal papers, found by name (bank, statement, tax, agreement, visa...) or by Spotlight finding ID or tax terms for your country inside the text. These are listed so you can see the space, and never ticked by default.</p>
+    <p>"Last used" is the newest of when the file arrived, changed, or was opened in an app. "Saves" counts disk space actually freed: copies that share storage with another file count as zero. Folders that hold a git repo or an app or photo library are never flagged.</p>
+    <p>Nothing has been deleted. This page is a preview.</p>
+  </section>
+</div>
+
+<script>
+const D = __DATA__;
+const GB = 1 << 30, MB = 1 << 20;
+const fmt = b => b >= GB ? (b / GB).toFixed(2) + " GB" : b >= MB ? Math.round(b / MB) + " MB" : Math.max(1, Math.round(b / 1024)) + " KB";
+const TIER_ORDER = { safe: 0, likely: 1, review: 2, keep: 3 };
+const WHY = {
+  "Duplicates": "Same bytes as another file that stays.",
+  "Already-extracted zips": "Every file inside is already in the folder next to it.",
+  "Installers": "Installer for an app you have, or one sitting unused.",
+  "Unfinished downloads": "Partial downloads that never completed.",
+  "Old screenshots": "macOS screenshots not opened in 90+ days.",
+  "Near-duplicate photos": "Burst shots with the same pose and framing as a neighbouring shot that stays.",
+  "Copy kept elsewhere": "Byte-identical copy in Documents, iCloud Drive or another drive.",
+  "Mostly copied elsewhere": "90%+ already elsewhere; a few small files exist only here.",
+  "AI-generated images & audio": "ChatGPT, Gemini, Sora, DALL-E, Freepik and ElevenLabs outputs.",
+  "Stock photos, music & templates": "From stock and wallpaper sites; downloadable again.",
+  "Design files, UI kits & fonts": "Figma kits, html.to.design captures, fonts.",
+  "Design exports & mockups": "Frame 123.png, image 2.jpg, shots.so mockups; re-export from Figma.",
+  "Screenshots": "Phone and Mac screenshots, folders of them.",
+  "App builds, data exports & code": "Old app builds, LinkedIn and Notion exports, GitHub zips.",
+  "Books, guides & long PDFs": "Ebooks and long published PDFs.",
+  "Hiring leftovers (résumés, job posts)": "Candidate résumés (found by their text) and job posts that already ran.",
+  "Trip quotes & itineraries": "Travel agent quotes and itineraries; trip date already passed.",
+  "Pitches, offers & brochures": "Other companies' sales decks, price lists, catalogues, course brochures.",
+  "Past events & invites": "Invites, posters and tickets whose date has passed.",
+  "Saved web pages": "Articles printed to PDF from a browser; still online.",
+  "Exports from Google Docs & Canva": "PDFs exported from Google Docs or Canva.",
+  "Images with random web names": "Random-ID file names, typical of images saved from the web.",
+  "Work files & decks": "Your decks, proposals and documents. May be the only copy.",
+  "Your ad & app-screen exports": "PNG and JPG exports of your own ads, posts and store screenshots.",
+  "Camera & phone photos": "Nikon, Sony and phone photos. May be personal.",
+  "Photos of people": "Images Vision recognises as photos of real people, held back from name-based groups.",
+  "Video & audio": "Recordings and audio. May be yours.",
+  "Other images": "Images no rule recognised.",
+  "Other documents": "Documents no rule recognised.",
+  "Everything else": "No rule matched.",
+  "ID, tax & bank papers": "GST, ITR, PAN, bank, visa and legal papers. Kept.",
+  "Big logs": "Log files over 10 MB.",
+  "Big and untouched": "Large files untouched for a long time.",
+  "Build folders": "Rebuilt automatically by the project's tools.",
+  "Tool caches": "Re-downloaded by the tool when needed."
+};
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const short = p => p.replace(D.label.replace(/\/$/, "") + "/", "");
+
+const groups = {};
+for (const it of D.items) {
+  const k = it.category + "|" + it.tier;
+  (groups[k] ||= { category: it.category, tier: it.tier, items: [], bytes: 0 }).items.push(it);
+  groups[k].bytes += it.saves;
+}
+for (const it of D.items) groups[it.category + "|" + it.tier].old = !!it.old;
+const list = Object.values(groups).sort((a, b) => (a.old - b.old) || TIER_ORDER[a.tier] - TIER_ORDER[b.tier] || b.bytes - a.bytes);
+const SECTIONS = [[false, "Clear-cut cleanup"], [true, "Old downloads (untouched 60+ days), by what they are"]];
+const tierBytes = { safe: 0, likely: 0, review: 0, keep: 0 };
+list.forEach(g => tierBytes[g.tier] += g.bytes);
+const flagged = list.filter(g => g.tier !== "keep").reduce((s, g) => s + g.bytes, 0);
+const flaggedN = list.filter(g => g.tier !== "keep").reduce((s, g) => s + g.items.length, 0);
+
+let saved = {};
+try { saved = JSON.parse(localStorage.getItem("picks") || "{}"); } catch (e) {}
+const picked = k => (k in saved ? saved[k] : groups[k].tier === "safe");
+
+document.getElementById("sub").textContent =
+  `Scanned ${D.generated}. ${flaggedN} items flagged, ${fmt(flagged)} in total` +
+  (D.total ? ` out of ${fmt(D.total)}.` : ".");
+
+function renderBar() {
+  const total = Math.max(D.total, flagged + tierBytes.keep) || 1;
+  const parts = [["safe", "var(--safe)", "Safe to delete"], ["likely", "var(--likely)", "Likely junk"], ["review", "var(--review)", "Your call"], ["keep", "var(--mine)", "Personal papers (kept)"]];
+  document.getElementById("bar").innerHTML = parts.map(([t, c]) =>
+    `<span style="width:${(tierBytes[t] / total * 100).toFixed(2)}%;background:${c}" title="${t}"></span>`).join("");
+  document.getElementById("legend").innerHTML = parts.map(([t, c, l]) =>
+    `<span><i style="background:${c}"></i>${l} <span class="num">${fmt(tierBytes[t])}</span></span>`).join("") +
+    (D.total ? `<span><i style="background:var(--keep)"></i>Not flagged <span class="num">${fmt(Math.max(0, D.total - flagged - tierBytes.keep))}</span></span>` : "");
+}
+
+function renderRows() {
+  document.getElementById("rows").innerHTML = SECTIONS.map(([old, title]) => {
+    const gs = list.filter(g => g.old === old);
+    if (!gs.length) return "";
+    const b = gs.filter(g => g.tier !== "keep").reduce((s, g) => s + g.bytes, 0);
+    return `<tr class="sec"><td></td><td colspan="3">${esc(title)}</td><td class="r num">${fmt(b)}</td><td></td></tr>` + gs.map(g => {
+    const k = g.category + "|" + g.tier;
+    return `<tr><td><input type="checkbox" id="pick-${esc(k).replace(/[^a-z0-9]/gi, "-")}" data-k="${esc(k)}" ${picked(k) ? "checked" : ""} aria-label="Include ${esc(g.category)}"></td>
+      <td>${esc(g.category)}</td><td><span class="pill ${g.tier}">${g.tier}</span></td>
+      <td class="r num">${g.items.length}</td><td class="r num">${fmt(g.bytes)}</td>
+      <td class="why">${esc(WHY[g.category] || "")}</td></tr>`;
+  }).join("");
+  }).join("");
+  document.getElementById("ft-n").textContent = flaggedN;
+  document.getElementById("ft-b").textContent = fmt(flagged);
+  document.querySelectorAll("#rows input").forEach(cb => cb.addEventListener("change", () => {
+    saved[cb.dataset.k] = cb.checked;
+    try { localStorage.setItem("picks", JSON.stringify(saved)); } catch (e) {}
+    updatePicked();
+  }));
+  updatePicked();
+}
+
+function updatePicked() {
+  let b = 0, n = 0;
+  list.forEach(g => { if (picked(g.category + "|" + g.tier)) { b += g.bytes; n += g.items.length; } });
+  document.getElementById("picked").textContent = fmt(b);
+  document.getElementById("pickedn").textContent = `(${n} items)`;
+}
+
+function renderGroups() {
+  const SHOW = 300;
+  document.getElementById("groups").innerHTML = SECTIONS.map(([old, title]) =>
+    `<h3 class="sec">${esc(title)}</h3>` + list.filter(g => g.old === old).map(g => {
+    const rows = g.items.slice(0, SHOW).map(it => `<div class="file">
+        <span class="p">${esc(short(it.path))}</span><span class="s">${fmt(it.saves)}</span>
+        <span class="w">${esc(it.reason)}${it.last_used ? " · last used " + esc(it.last_used) : ""}${it.keeps ? " · keeping " + esc(short(it.keeps)) + (it.more_keeps > 0 ? ` (+${it.more_keeps} more)` : "") : ""}</span>
+      </div>`).join("");
+    const more = g.items.length > SHOW ? `<div class="more">and ${g.items.length - SHOW} smaller items</div>` : "";
+    return `<details><summary><span class="pill ${g.tier}">${g.tier}</span><span class="grow">${esc(g.category)}</span>
+      <span class="num why">${g.items.length} items · ${fmt(g.bytes)}</span></summary><div class="files">${rows}${more}</div></details>`;
+  }).join("")).join("");
+}
+
+renderBar(); renderRows(); renderGroups();
+</script>
