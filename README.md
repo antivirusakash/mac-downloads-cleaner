@@ -1,55 +1,53 @@
 # declutter
 
-A preview-only cleanup scanner for a Mac's Downloads folder. It reads your files, works out what each one is and whether you still need it, and writes a report plus a one-page HTML preview grouped by kind. It never deletes, moves or uploads anything.
+**Your Downloads folder is full, and you're scared to empty it.** Somewhere in there is your passport scan. Next to it are dozens of AI images you made once, a résumé from a hiring round that ended in March, and a hotel quote for a trip you took last year. Sorting by size or date can't tell those apart.
 
-Most cleanup tools sort by size and age, which can't tell a résumé from a finished hiring round apart from a travel quote for a trip still ahead or the only copy of your passport scan. This tool reads each file to tell them apart, using the metadata macOS already keeps and a few on-device models.
+declutter opens every file, works out what it is and whether you still need it, and shows you one page grouped like this:
 
-## What it looks at
+| What it found | Files | Space | Suggestion |
+|---|---|---|---|
+| Copies you already have somewhere else | 14 | 58 MB | safe to delete |
+| AI images and audio | 87 | 250 MB | probably done with |
+| Exports of your own ads and app screens | 17 | 252 MB | probably done with |
+| Other people's résumés | 6 | 29 MB | probably done with |
+| Trip quotes for trips that are over | 2 | 6 MB | probably done with |
+| Near-identical burst shots | 12 | 124 MB | look first |
+| Camera photos | 24 | 1.7 GB | look first |
+| ID, tax and bank papers | 13 | 98 MB | keep |
 
-| Signal | Source | Used for |
-|---|---|---|
-| Byte-identical copy elsewhere | size, then head+tail hash, then full hash; zip entries by CRC32 | "Copy kept elsewhere" (the only old-download group marked safe) |
-| Date added, last opened, camera model, page count, screenshot flag, capture time | Spotlight (`mdls`) | age, camera photos, long PDFs, screenshots |
-| ID, tax and bank terms inside text | Spotlight full-text search, with a word list per country | the keep group |
-| PDF text and the author named inside the PDF | PDFKit | résumés, travel quotes, sales pitches, past events, pages printed from a browser |
-| Text in images, scene labels, faces | Vision | your own brand in an ad, photos of real people held back |
-| AI provenance (C2PA / IPTC `trainedAlgorithmicMedia`) | the file's own bytes | AI-generated images, and which tool made them |
-| Feature prints, aesthetics scores, capture times | Vision, Spotlight | near-identical burst shots; a shot whose name marks it a pick stays, else the best-rated one |
-| Dates inside documents | PDF text (English and Hindi month names) | trips and events count as over only after their last date |
+These are real numbers from the author's own Downloads. Altogether, about 1.8 GB was stuff they were probably done with.
 
-Everything runs on your Mac with the system Python and `osascript`. Nothing is installed and nothing goes over the network.
+It never deletes anything. You tick the groups you're done with, the page adds up the space, and you delete them yourself.
 
-## Tiers
-
-- **safe**: a byte-identical copy exists somewhere that stays, or the file is junk by construction (an unfinished download, a zip already extracted next to itself).
-- **likely**: things you can get again or whose job is over: AI images, stock files, UI kits, design exports, other people's résumés, past trips and events.
-- **review**: may be the only copy of your work or memories: decks, camera photos, recordings, anything no rule recognised.
-- **keep**: ID, tax, bank and legal papers. Shown so you can see the space, never ticked by default.
-
-Your own files never move on a purpose signal. A file counts as yours when your name, handle or brand appears in its name, metadata, PDF text, or (for images) the text Vision reads in it.
-
-## Run it
+## Try it
 
 ```sh
 git clone https://github.com/antivirusakash/declutter && cd declutter
-./run.sh                    # scans ~/Downloads, writes out/report.json and preview.html
-DIR=~/Desktop ./run.sh      # any other folder
-open preview.html
+./run.sh && open preview.html
 ```
 
-Or step by step:
+A 7 GB folder takes a bit over a minute. There's nothing to install, and none of your files leave your Mac.
 
-```sh
-python3 -I declutter.py --out out ~/Downloads
-python3 -I check.py out/report.json          # invariants every report must satisfy
-python3 -I render.py out/report.json preview.html --total-bytes $(du -sk ~/Downloads | awk '{print $1*1024}')
-```
+To scan a different folder, run `DIR=~/Desktop ./run.sh`.
 
-A scan of a 7 GB Downloads folder with 4,500 files takes about 75 seconds on an M-series Mac mini, most of it Vision.
+## What it can tell apart
+
+- A file you already have a copy of, in another folder or on an external drive. The two copies have to match exactly, byte for byte.
+- AI images, and which app made them. Many AI images carry a hidden label inside the file saying what made them, and declutter reads it.
+- Stock photos, UI kits, fonts and design exports you can download again.
+- Résumés and job posts from someone else's hiring round.
+- Travel quotes and event passes whose dates have passed. A trip next month stays.
+- Burst shots that look almost the same. It keeps the one you marked as a pick, or else the best-looking one.
+- Photos with real people in them. These are always held back for you to look at.
+- Your ID, tax and bank papers. They sit in their own group, and that group is never ticked for you.
+
+## What it won't suggest deleting
+
+Your own work. A file counts as yours when your name, username or brand shows up in its name, inside a PDF, or as text in an image. Decks, recordings and camera photos also stay in "look first", because they might be the only copy you have.
 
 ## Tell it who you are
 
-Out of the box it uses your full name from `id -F`, your login name, your region from System Settings (which picks the ID-term list), and every mounted drive as a place a second copy might live. Add what it can't know in `~/.config/declutter/config.json` (or pass `--config`):
+It already knows your name and username from your Mac. If you have a brand, a company or a nickname, put it in `~/.config/declutter/config.json`:
 
 ```json
 {
@@ -61,42 +59,85 @@ Out of the box it uses your full name from `id -F`, your login name, your region
 }
 ```
 
-`brands` and `work_hints` mark files as your own work. `country` picks extra ID terms (`IN`, `US` and `GB` ship today; adding one is a few lines in `owner.py`). `index_roots`, if set, replaces the default list of places searched for copies.
+`country` adds that country's ID and tax words, so a W-2 or an Aadhaar card lands in "keep". India, the US and the UK are built in.
 
-## How it was measured
+## Does it get it right?
 
-On the author's own Downloads, every one of the 290 items untouched for 60+ days was labelled DELETE_OK, KEEP or UNSURE by reviewer agents that opened each file and never saw the scanner's verdict. `eval.py` scores a report against such labels:
+To test it, AI reviewers went through 290 old files on the author's Mac, opening each one. They marked every file "fine to delete", "keep" or "not sure" without seeing what declutter had said. The results:
 
-| Version | Precision of safe + likely | Keep-worthy items wrongly in safe/likely | Deletable bytes found |
+- 99% of what declutter suggested deleting was fine to delete.
+- None of it was a file worth keeping.
+- It found 94% of the space that could go.
+
+The rules were tuned on those same 290 files, so expect it to do a bit worse on yours.
+
+## Limits
+
+- Mac only. It relies on the search, PDF and image-recognition features built into macOS.
+- A folder is judged as a whole. If one file inside looks personal, the whole folder is held back.
+- It reads dates written in English and Hindi. Events with dates in other languages stay in "look first".
+
+<details>
+<summary>How it works, for the curious</summary>
+
+### Signals
+
+| Signal | Where it comes from | Used for |
+|---|---|---|
+| Byte-identical copy elsewhere | size, then a hash of the start and end, then a full hash; files inside zips by CRC32 | "Copy kept elsewhere" |
+| Date added, last opened, camera model, page count, screenshot flag, capture time | Spotlight (`mdls`) | age, camera photos, long PDFs, screenshots |
+| ID, tax and bank words inside files | Spotlight full-text search, with a word list per country | the keep group |
+| PDF text and the PDF's author field | PDFKit | résumés, travel quotes, sales pitches, past events, pages printed from a browser |
+| Text in images, scene labels, faces | Vision | your brand in an ad; photos of people held back |
+| AI provenance (C2PA / IPTC `trainedAlgorithmicMedia`) | the file's own bytes | AI-generated images and the tool that made them |
+| Feature prints, aesthetics scores, capture times | Vision, Spotlight | near-identical burst shots |
+| Dates inside documents | PDF text | trips and events count as over only after their last date |
+
+Everything runs with the system Python and `osascript`.
+
+### Groups
+
+- **safe**: an exact copy exists somewhere that stays, or the file is junk by construction (an unfinished download, a zip already unzipped next to itself).
+- **likely**: things you can get again or whose job is over.
+- **review**: things that may be the only copy of your work or memories.
+- **keep**: ID, tax, bank and legal papers. They're shown so you can see the space, and never ticked by default.
+
+### Step by step
+
+```sh
+python3 -I declutter.py --out out ~/Downloads
+python3 -I check.py out/report.json          # rules every report must follow
+python3 -I render.py out/report.json preview.html --total-bytes $(du -sk ~/Downloads | awk '{print $1*1024}')
+```
+
+Other config keys: `index_roots` replaces the default list of places it searches for copies (Documents, Desktop, Pictures, Movies, Music, iCloud Drive and every mounted drive).
+
+### Scoring it on your own files
+
+Put JSONL rows like `{"path": "/Users/you/Downloads/x.pdf", "label": "KEEP"}` in `private/labels/` and run `./run.sh`. `eval.py` prints precision and recall against your labels.
+
+| Version | Suggested deletes that were fine | Keepers wrongly suggested | Deletable space found |
 |---|---|---|---|
 | Name and type rules only | 97.1% | 2 | 78.9% |
-| + exports of your own work split from decks | 97.5% | 2 | 92.8% |
+| + your own exports split from decks | 97.5% | 2 | 92.8% |
 | + Vision people check | 99.0% | 0 | 92.7% |
 | + C2PA provenance | 99.0% | 0 | 93.9% |
-| + OCR brand and screenshot flag on leftover images | 99.0% | 0 | 94.3% |
+| + text and screenshot flag on leftover images | 99.0% | 0 | 94.3% |
 
-Burst detection is scored separately: a reviewer compared each proposed extra with the shot that stays, and 11 of 12 were safe to drop (one had a different expression), so that group stays in review.
+Burst shots were checked separately. A reviewer compared each extra shot with the one that stays, and 11 of 12 were fine to drop (one had a different expression), so bursts stay in review.
 
-The rules were tuned on the same items they are scored on, so treat these as an upper bound for your folder. The synthetic fixture in `tests/` exercises every rule without any real files.
-
-To score it on your own files, put JSONL rows like `{"path": "/Users/you/Downloads/x.pdf", "label": "KEEP"}` in `private/labels/` and run `./run.sh`.
-
-## Tests
+### Tests
 
 ```sh
 python3 -I -m unittest discover -s tests
 ```
 
-`tests/make_fixture.py` builds a fake Downloads folder for a made-up owner, one file per rule, and the end-to-end test checks each lands in its group and that `check.py` passes.
+`tests/make_fixture.py` builds a fake Downloads folder for a made-up owner, one file per rule. The end-to-end test checks each file lands in its group and that `check.py` passes. Aesthetics scores need macOS 15. On older systems a burst keeps its earliest shot.
 
-## Privacy
+### Privacy
 
-Reports and previews contain your file names and stay in `out/`, which git ignores. Before pushing changes, `python3 -I privacy_check.py` fails if any tracked file contains your configured names or brands, an email address, a phone number, or the name of any file in the folders you scanned.
+Reports and previews contain your file names and stay in `out/`, which git ignores. Before pushing, `python3 -I privacy_check.py` fails if any tracked file contains your configured names or brands, an email address, a phone number, or the name of any file in the folders you scanned.
 
-## Limits
-
-- macOS only (Spotlight, PDFKit, Vision). Aesthetics scores need macOS 15; on older systems a burst keeps its earliest shot.
-- Dates in scripts other than Latin and Devanagari aren't read, so such events stay in review.
-- A folder is judged as a whole; a mixed folder is held back when any file in it looks personal.
+</details>
 
 MIT licensed.
