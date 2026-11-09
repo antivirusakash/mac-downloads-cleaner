@@ -6,7 +6,7 @@
 It opens every file, works out what it is, and shows you what can go. It never deletes anything.</p>
 
 <p>
-<a href="https://github.com/antivirusakash/declutter/actions/workflows/test.yml"><img alt="Tests" src="https://github.com/antivirusakash/declutter/actions/workflows/test.yml/badge.svg"></a>
+<a href="https://github.com/antivirusakash/mac-downloads-cleaner/actions/workflows/test.yml"><img alt="Tests" src="https://github.com/antivirusakash/mac-downloads-cleaner/actions/workflows/test.yml/badge.svg"></a>
 <img alt="macOS" src="https://img.shields.io/badge/macOS-only-111?logo=apple&logoColor=white">
 <img alt="Python 3.9+" src="https://img.shields.io/badge/python-3.9%2B-3776AB?logo=python&logoColor=white">
 <img alt="No installs" src="https://img.shields.io/badge/dependencies-none-2ea44f">
@@ -32,7 +32,7 @@ In the scan above, it found 1.67 GB that was probably junk and 145 MB that was s
 ## Try it
 
 ```sh
-git clone https://github.com/antivirusakash/declutter && cd declutter
+git clone https://github.com/antivirusakash/mac-downloads-cleaner && cd mac-downloads-cleaner
 ./run.sh && open preview.html
 ```
 
