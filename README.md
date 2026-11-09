@@ -1,6 +1,6 @@
 <div align="center">
 
-<h1>declutter</h1>
+<h1>Mac Downloads Cleaner</h1>
 
 <p><b>Find out what you can safely delete from your Mac's Downloads folder.</b><br>
 It opens every file, works out what it is, and shows you what can go. It never deletes anything.</p>
@@ -25,7 +25,7 @@ It opens every file, works out what it is, and shows you what can go. It never d
 
 <br>
 
-**Your Downloads folder is full, and you're scared to empty it.** Somewhere in there is your passport scan. Next to it are dozens of AI images you made once, a résumé from a hiring round that ended in March, and a hotel quote for a trip you took last year. Sorting by size or date can't tell those apart. declutter can, because it reads what's inside each file.
+**Your Downloads folder is full, and you're scared to empty it.** Somewhere in there is your passport scan. Next to it are dozens of AI images you made once, a résumé from a hiring round that ended in March, and a hotel quote for a trip you took last year. Sorting by size or date can't tell those apart. This tool can, because it reads what's inside each file.
 
 In the scan above, it found 1.67 GB that was probably junk and 145 MB that was safe to delete outright. The author's ID, tax and bank papers (93 MB) got their own group, set aside to keep.
 
@@ -48,7 +48,7 @@ To scan a different folder, run `DIR=~/Desktop ./run.sh`.
 </picture>
 
 - **Copies you already have**, in another folder, in iCloud Drive or on an external drive. The two have to match byte for byte.
-- **AI images, and which app made them.** Many AI images carry a hidden label inside the file saying what made them, and declutter reads it.
+- **AI images, and which app made them.** Many AI images carry a hidden label inside the file saying what made them, and the scanner reads it.
 - **Stock photos, UI kits, fonts and design exports** you can download or export again.
 - **Résumés and job posts** from someone else's hiring round.
 - **Travel quotes and event passes whose dates have passed.** A trip next month stays.
@@ -89,9 +89,9 @@ It already knows your name and username from your Mac. If you have a brand, a co
 
 ## Does it get it right?
 
-To test it, AI reviewers went through 290 old files on the author's Mac, opening each one. They marked every file "fine to delete", "keep" or "not sure" without seeing what declutter had said. The results:
+To test it, AI reviewers went through 290 old files on the author's Mac, opening each one. They marked every file "fine to delete", "keep" or "not sure" without seeing what the scanner had said. The results:
 
-- 99% of what declutter suggested deleting was fine to delete.
+- 99% of what the scanner suggested deleting was fine to delete.
 - None of it was a file worth keeping.
 - It found 94% of the space that could go.
 
